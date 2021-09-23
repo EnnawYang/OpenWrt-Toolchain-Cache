@@ -100,7 +100,7 @@ jobs:
           cd $OPENWRTROOT
           export COMMIT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
           echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
-          find -maxdepth 1 -not -name staging_dir -not -name build_dir -not -name .ccache | xargs rm -rf {}
+          find -maxdepth 1 -not -name staging_dir -not -name build_dir -not -name .ccache -not -name . | xargs rm -rf {}
           rm -rf build_dir/target*
           rm -rf staging_dir/target*
           mkdir -p ../output
