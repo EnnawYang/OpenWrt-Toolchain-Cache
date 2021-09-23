@@ -4,13 +4,13 @@
 
 本项目旨在生成 OpenWrt 工具链 (toolchain) 并将工具链缓存至 Release。
 
-镜像文件有以下特性:
+本项目有以下特性:
 
-- 在 Github Action 流程中可节省 30~40 分钟的 toolchain 编译时间
 - 一键生成多平台工具链并自动发布至本仓库 Release
+- 在 Github Action 流程中可节省 30~40 分钟的 tools & toolchain 编译时间
 - 提供适用于本项目工具链缓存的 Github Action [示例文件](https://github.com/SuLingGG/OpenWrt-Toolchain/blob/main/.github/workflows/coolsnowwolf-lede-example.yml)
 
-## 生成镜像
+## 生成工具链
 
 - Fork 本项目，在 config 文件夹内创建以设备 `target/subtarget.config` 为 `路径/文件名` 命名的 OpenWrt 目标平台配置文件。
 
@@ -42,4 +42,4 @@
 
 ## 使用镜像
 
-- 在 Github Action 中使用本项目镜像请参考 [示例文件](https://github.com/SuLingGG/OpenWrt-Toolchain/blob/main/.github/workflows/coolsnowwolf-lede-example.yml) 。
+- 在 Github Action 中使用本项目工具链请参考 [示例文件](https://github.com/SuLingGG/OpenWrt-Cache/blob/main/.github/workflows/coolsnowwolf-lede-example.yml) 。
