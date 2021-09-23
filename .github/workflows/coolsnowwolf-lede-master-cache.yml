@@ -106,7 +106,7 @@ jobs:
           cd ..
           mkdir -p output
           tar -Jcvf output/openwrt-toolchain-cache-$TARGET-$SUBTARGET.tar.xz -C openwrt .
-          echo $COMMIT_HASH >> output/commit-hash-$TARGET-$SUBTARGET
+          echo $COMMIT_HASH >> output/commit-hash.txt
           echo "::set-output name=RELEASE_TAG::$REPO_USER-$REPO_NAME-$REPO_BRANCH-$TARGET-$SUBTARGET"
           df -hT $PWD
 
