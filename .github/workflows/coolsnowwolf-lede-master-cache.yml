@@ -105,15 +105,19 @@ jobs:
           rm -rf staging_dir/target*
           cd ..
           mkdir -p output
-          tar -Jcvf output/$REPO_USER-$REPO_NAME-$REPO_BRANCH-$TARGET-$SUBTARGET.tar.xz -C openwrt .
+          tar -Jcvf output/openwrt-toolchain-cache-$TARGET-$SUBTARGET.tar.xz -C openwrt .
           echo $COMMIT_HASH >> output/commit-hash-$TARGET-$SUBTARGET
           echo "::set-output name=RELEASE_TAG::$REPO_USER-$REPO_NAME-$REPO_BRANCH-$TARGET-$SUBTARGET"
           df -hT $PWD
 
-      - name: Upload Cache Archive To Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy Files To Release
+        id: release
+        uses: ncipollo/release-action@v1.8.0
         with:
-          tag_name: ${{ steps.generate.outputs.RELEASE_TAG }}
-          files: output/*
+          name: OpenWrt-Toolchain-Cache
+          allowUpdates: true
+          tag: toolchain
+          commit: main
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: output/*
