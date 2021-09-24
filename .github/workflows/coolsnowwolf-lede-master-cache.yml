@@ -53,6 +53,8 @@ jobs:
           echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
           export SOURCE_NAME="$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')"
           echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
 
       - name: Compare Hash
         id: compare
@@ -69,8 +71,7 @@ jobs:
         id: feeds
         if: steps.compare.outputs.NEED_CACHE == 'true'
         run: |
-          cd openwrt
-          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+          cd $OPENWRTROOT
           ./scripts/feeds update -a 
           ./scripts/feeds install -a
 
