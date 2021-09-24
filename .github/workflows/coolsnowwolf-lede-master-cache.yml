@@ -48,7 +48,7 @@ jobs:
         id: clone
         run: |
           df -hT $PWD
-          git clone --depth 1 $SOURCE_URL -b $SOURCE_BRANCH openwrt
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt
           export SOURCE_USER="$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')"
           echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
           export SOURCE_NAME="$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')"

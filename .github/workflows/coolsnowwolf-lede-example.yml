@@ -44,7 +44,7 @@ jobs:
       - name: Prepare OpenWrt Source
         id: prepare
         run: |
-          git clone --depth 1 $SOURCE_URL -b $SOURCE_BRANCH openwrt
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt
           cd openwrt
           echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
           ./scripts/feeds update -a
