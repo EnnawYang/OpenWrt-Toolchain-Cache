@@ -65,7 +65,9 @@ jobs:
         run: |
           cd $OPENWRTROOT
           export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
+          echo $CURRENT_HASH
           export CACHE_HASH=$(curl -fSsL https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/cache-hash.txt)
+          echo $CACHE_HASH
           if [ "$CURRENT_HASH" == "$CACHE_HASH" ]; then
             wget -qc https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/$TOOLCHAIN_NAME -O - | tar -xJ
             find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
