@@ -18,7 +18,7 @@ env:
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
   CACHE_REPO: SuLingGG/OpenWrt-Cache
-  CACHE_NAME: openwrt-toolchain-cache-bcm27xx-bcm2711.tar.xz
+  CACHE_NAME: coolsnowwolf-lede-master-bcm27xx-bcm2711.tar.xz
   CACHE_TAG: toolchain
   TZ: Asia/Shanghai
 
