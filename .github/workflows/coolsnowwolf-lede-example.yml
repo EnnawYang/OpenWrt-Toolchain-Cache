@@ -69,7 +69,7 @@ jobs:
           export CACHE_HASH=$(curl -fSsL https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/cache-hash.txt)
           echo "CACHE_HASH is $CACHE_HASH"
           if [ "$CURRENT_HASH" == "$CACHE_HASH" ]; then
-            wget -qc https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/$TOOLCHAIN_NAME -O - | tar -xJ
+            wget -qc https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/$CACHE_NAME -O - | tar -xJ
             find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
             touch staging_dir/{host*,toolchain-*,target-*}/stamp/.*
             sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
