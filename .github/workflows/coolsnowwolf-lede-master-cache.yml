@@ -62,7 +62,9 @@ jobs:
           cd $OPENWRTROOT
           export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
           echo "CURRENT_HASH=$CURRENT_HASH" >> $GITHUB_ENV
+          echo "CURRENT_HASH is $CURRENT_HASH"
           export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/cache-hash.txt)
+          echo "CACHE_HASH is $CACHE_HASH"
           if [ -z "$CACHE_HASH" ] || [ "$CURRENT_HASH" != "$CACHE_HASH" ]; then
             echo "::set-output name=NEED_CACHE::true"
           fi
