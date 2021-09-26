@@ -17,8 +17,8 @@ on:
 env:
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
-  CACHE_BRANCH: main
-  CACHE_TAG: toolchain
+  RELEASE_BRANCH: main
+  TOOLCHAIN_TAG: toolchain
   TZ: Asia/Shanghai
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
           cd $OPENWRTROOT
           export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
           echo "CURRENT_HASH=$CURRENT_HASH" >> $GITHUB_ENV
-          export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$CACHE_TAG/cache-hash.txt)
+          export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/cache-hash.txt)
           if [ -z "$CACHE_HASH" ] || [ "$CURRENT_HASH" != "$CACHE_HASH" ]; then
             echo "::set-output name=NEED_CACHE::true"
           fi
@@ -132,8 +132,8 @@ jobs:
         with:
           name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-toolchain-cache
           allowUpdates: true
-          tag: ${{ env.CACHE_TAG }}
-          commit: ${{ env.CACHE_BRANCH }}
+          tag: ${{ env.RELEASE_TAG }}
+          commit: ${{ env.RELEASE_BRANCH }}
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: output/*
