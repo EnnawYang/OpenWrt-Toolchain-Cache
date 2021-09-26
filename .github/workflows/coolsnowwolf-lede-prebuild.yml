@@ -1,0 +1,156 @@
+#=================================================
+# https://github.com/P3TERX/Actions-OpenWrt
+
+# Description: Build OpenWrt using GitHub Actions
+# Lisence: MIT
+# Author: P3TERX
+# Blog: https://p3terx.com
+#=================================================
+
+name: Coolsnowwolf/Lede Pre-Build
+on:
+  workflow_dispatch:
+#  schedule:
+#    - cron: 0 18 * * *
+#  watch:
+#    types: started
+
+env:
+  SOURCE_URL: https://github.com/coolsnowwolf/lede
+  SOURCE_BRANCH: master
+  TOOLCHAIN_PREFIX: coolsnowwolf-lede-master
+  TOOLCHAIN_TAG: toolchain
+  RELEASE_BRANCH: main
+  RELEASE_TAG: prebuild
+  TZ: Asia/Shanghai
+
+jobs:
+  Build:
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        PLATFORM: [bcm27xx/bcm2708, bcm27xx/bcm2709, bcm27xx/bcm2710, bcm27xx/bcm2711, ipq40xx/generic, rockchip/armv8, x86/64, x86/generic]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Initialization Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+      - name: Clone Source Code
+        id: clone
+        run: |
+          df -hT $PWD
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt
+          export SOURCE_USER="$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')"
+          echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
+          export SOURCE_NAME="$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')"
+          echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
+          export TARGET="$(echo $PLATFORM | awk -F '/' '{print $1}')
+          echo "TARGET=$TARGET" >> $GITHUB_ENV
+          export SUBTARGET="$(echo $PLATFORM | awk -F '/' '{print $2}')
+          echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+
+      - name: Compare Toolchain Hash
+        id: compare
+        run: |
+          cd $OPENWRTROOT
+          export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
+          echo "CURRENT_HASH=$CURRENT_HASH" >> $GITHUB_ENV
+          export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$TOOLCHAIN_PREFIX-$TARGET-SUBTARGET/cache-hash.txt)
+          if [ -z "$CACHE_HASH" ] || [ "$CURRENT_HASH" != "$CACHE_HASH" ]; then
+            echo "::set-output name=COMPILE_TOOLCHAIN::true"
+          else
+            echo "::set-output name=COMPILE_TOOLCHAIN::false"
+          fi
+
+      - name: Install Feeds
+        id: feeds
+        run: |
+          cd $OPENWRTROOT
+          ./scripts/feeds update -a 
+          ./scripts/feeds install -a
+
+      - name: Download Packages
+        env:
+          PLATFORM: ${{ matrix.PLATFORM }}
+        id: download
+        run: |
+          mv config/$PLATFORM.config $OPENWRTROOT/.config
+          cd $OPENWRTROOT
+          make defconfig
+          make download -j16
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
+
+      - name: Fetch Cached Toolchain
+        id: fetch
+        if: steps.compare.outputs.COMPILE_TOOLCHAIN == 'false'
+        run: |
+          cd $OPENWRTROOT
+          wget -qc https://github.com/$GITHUB_REPOSITORY/releases/download/$TOOLCHAIN_TAG/$TOOLCHAIN_PREFIX-$TARGET-$SUBTARGET.tar.xz -O - | tar -xJ
+
+      - name: Compile Tools
+        id: tools
+        if: steps.compare.outputs.COMPILE_TOOLCHAIN == 'true'
+        run: |
+          cd $OPENWRTROOT
+          echo -e "$(nproc) thread compile"
+          make tools/compile -j$(nproc) || make tools/compile -j1 V=s
+
+      - name: Compile Toolchain
+        id: toolchain
+        if: steps.compare.outputs.COMPILE_TOOLCHAIN == 'true'
+        run: |
+          cd $OPENWRTROOT
+          echo -e "$(nproc) thread compile"
+          make toolchain/compile -j$(nproc) || make toolchain/compile -j1 V=s
+
+      - name: Pre-Build Packages
+        id: prebuild
+        run: |
+          cd $OPENWRTROOT
+          sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
+          echo -e "$(nproc) thread compile"
+          make -j$(nproc) IGNORE_ERRORS=1 || make -j1 V=s IGNORE_ERRORS=1
+
+      - name: Clean Files
+        id: clean
+        run: |
+          cd $OPENWRTROOT
+          make clean
+          rm -rf bin dl logs tmp .config*
+          ./scripts/feeds clean
+
+      - name: Generate Prebuild Image
+        id: generate
+        run: |
+          export FILE_NAME="prebuild-image-$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.img"
+          mksquashfs openwrt $FILE_NAME -force-gid 1001 -force-uid 1001 -comp xz
+          mkdir output
+          mv $FILE_NAME output
+          df -hT $PWD
+
+      - name: Deploy Files To Release
+        id: release
+        uses: ncipollo/release-action@v1.8.0
+        with:
+          name: prebuild-image-${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}
+          allowUpdates: true
+          tag: ${{ env.RELEASE_TAG }}
+          commit: ${{ env.RELEASE_BRANCH }}
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: output/*
