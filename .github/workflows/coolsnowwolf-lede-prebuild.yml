@@ -128,6 +128,7 @@ jobs:
           cd $OPENWRTROOT
           sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
           echo -e "$(nproc) thread compile"
+          make target/compile -j$(nproc) || make target/compile -j1 V=s IGNORE_ERRORS=1
           make package/compile -j$(nproc) IGNORE_ERRORS=1 || make package/compile -j1 V=s IGNORE_ERRORS=1
 
       - name: Clean Files
