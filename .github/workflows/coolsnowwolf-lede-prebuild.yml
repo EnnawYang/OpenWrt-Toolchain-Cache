@@ -58,9 +58,9 @@ jobs:
           echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
           export SOURCE_NAME="$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')"
           echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
-          export TARGET="$(echo $PLATFORM | awk -F '/' '{print $1}')
+          export TARGET="$(echo $PLATFORM | awk -F '/' '{print $1}')"
           echo "TARGET=$TARGET" >> $GITHUB_ENV
-          export SUBTARGET="$(echo $PLATFORM | awk -F '/' '{print $2}')
+          export SUBTARGET="$(echo $PLATFORM | awk -F '/' '{print $2}')"
           echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
           cd openwrt
           echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
