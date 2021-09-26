@@ -49,6 +49,8 @@ jobs:
 
       - name: Clone Source Code
         id: clone
+        env:
+          PLATFORM: ${{ matrix.PLATFORM }}
         run: |
           df -hT $PWD
           git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt
