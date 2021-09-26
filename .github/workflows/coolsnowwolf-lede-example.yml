@@ -17,9 +17,9 @@ on:
 env:
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
-  CACHE_REPO: SuLingGG/OpenWrt-Cache
-  CACHE_NAME: coolsnowwolf-lede-master-bcm27xx-bcm2711.tar.xz
-  CACHE_TAG: toolchain
+  TOOLCHAIN_REPO: SuLingGG/OpenWrt-Cache
+  TOOLCHAIN_NAME: coolsnowwolf-lede-master-bcm27xx-bcm2711.tar.xz
+  TOOLCHAIN_TAG: toolchain
   TZ: Asia/Shanghai
 
 jobs:
@@ -66,12 +66,10 @@ jobs:
           cd $OPENWRTROOT
           export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
           echo "CURRENT_HASH is $CURRENT_HASH"
-          export CACHE_HASH=$(curl -fSsL https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/cache-hash.txt)
+          export CACHE_HASH=$(curl -fSsL https://github.com/$TOOLCHAIN_REPO/releases/download/$TOOLCHAIN_TAG/cache-hash.txt)
           echo "CACHE_HASH is $CACHE_HASH"
           if [ "$CURRENT_HASH" == "$CACHE_HASH" ]; then
-            wget -qc https://github.com/$CACHE_REPO/releases/download/$CACHE_TAG/$CACHE_NAME -O - | tar -xJ
-            find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
-            touch staging_dir/{host*,toolchain-*,target-*}/stamp/.*
+            wget -qc https://github.com/$TOOLCHAIN_REPO/releases/download/$TOOLCHAIN_TAG/$TOOLCHAIN_NAME -O - | tar -xJ
             sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
           fi
 
