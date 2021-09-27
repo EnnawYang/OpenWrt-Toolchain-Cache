@@ -93,6 +93,7 @@ jobs:
         id: download
         run: |
           mv config/$PLATFORM.config $OPENWRTROOT/.config
+          cat config/prebuild-packages.conf >> $OPENWRTROOT/.config
           cd $OPENWRTROOT
           make defconfig
           make download -j16
@@ -142,10 +143,11 @@ jobs:
       - name: Generate Prebuild Image
         id: generate
         run: |
-          export FILE_NAME="prebuild-image-$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.img"
+          export FILE_NAME="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET-prebuild-image.img"
           mksquashfs openwrt $FILE_NAME -force-gid 1001 -force-uid 1001 -comp xz
           mkdir output
           mv $FILE_NAME output
+          ls -alh output
           df -hT $PWD
 
       - name: Deploy Files To Release
