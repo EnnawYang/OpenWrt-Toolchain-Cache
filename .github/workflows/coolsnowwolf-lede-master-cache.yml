@@ -18,7 +18,7 @@ env:
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
   RELEASE_BRANCH: main
-  TOOLCHAIN_TAG: toolchain
+  RELEASE_TAG: toolchain
   TZ: Asia/Shanghai
 
 jobs:
