@@ -154,7 +154,7 @@ jobs:
         id: release
         uses: ncipollo/release-action@v1.8.0
         with:
-          name: prebuild-image-${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}
+          name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-prebuild-image
           allowUpdates: true
           tag: ${{ env.RELEASE_TAG }}
           commit: ${{ env.RELEASE_BRANCH }}
