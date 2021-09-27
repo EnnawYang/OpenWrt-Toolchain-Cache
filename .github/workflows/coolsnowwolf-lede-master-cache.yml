@@ -84,6 +84,7 @@ jobs:
         if: steps.compare.outputs.NEED_CACHE == 'true'
         run: |
           mv config/$PLATFORM.config $OPENWRTROOT/.config
+          cat config/prebuild-packages.conf >> $OPENWRTROOT/.config
           cd $OPENWRTROOT
           make defconfig
           make download -j16
