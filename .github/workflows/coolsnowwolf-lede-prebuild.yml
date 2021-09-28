@@ -144,9 +144,11 @@ jobs:
         id: generate
         run: |
           export FILE_NAME="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET-prebuild-image.img"
-          mksquashfs openwrt $FILE_NAME -force-gid 1001 -force-uid 1001 -comp xz
-          mkdir output
-          mv $FILE_NAME output
+          mkdir -p output
+          mksquashfs openwrt output/$FILE_NAME -force-gid 1001 -force-uid 1001 -comp xz
+          cd output
+          split -C 1.9G -d $FILE_NAME $FILE_NAME.
+          rm -f $FILE_NAME
           ls -alh output
           df -hT $PWD
 
