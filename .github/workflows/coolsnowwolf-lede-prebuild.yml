@@ -149,7 +149,7 @@ jobs:
           cd output
           split -C 1900M -d $FILE_NAME $FILE_NAME.
           rm -f $FILE_NAME
-          ls -alh output
+          ls -alh
           df -hT $PWD
 
       - name: Deploy Files To Release
