@@ -106,6 +106,9 @@ jobs:
         run: |
           cd $OPENWRTROOT
           wget -qc https://github.com/$GITHUB_REPOSITORY/releases/download/$TOOLCHAIN_TAG/$TOOLCHAIN_PREFIX-$TARGET-$SUBTARGET.tar.xz -O - | tar -xJ
+          find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
+          touch staging_dir/{host*,toolchain-*,target-*}/stamp/.*
+          # sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
 
       - name: Compile Tools
         id: tools
@@ -127,7 +130,6 @@ jobs:
         id: prebuild
         run: |
           cd $OPENWRTROOT
-          sed -i 's/ $(tool.*\/stamp-compile)//;' Makefile
           echo -e "$(nproc) thread compile"
           make target/compile -j$(nproc) || make target/compile -j1 V=s IGNORE_ERRORS=1
           make package/compile -j$(nproc) IGNORE_ERRORS=1 || make package/compile -j1 V=s IGNORE_ERRORS=1
