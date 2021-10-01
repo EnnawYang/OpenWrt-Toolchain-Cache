@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Coolsnowwolf/Lede Example
+name: Coolsnowwolf/Lede Toolchain Example
 on:
   workflow_dispatch:
 #  schedule:
