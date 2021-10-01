@@ -38,25 +38,6 @@ jobs:
           sudo -E apt-get -qq clean
           sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-      - name: Prepare OpenWrt Source
-        id: prepare
-        run: |
-          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt
-          cd openwrt
-          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: Download Packages
-        id: download
-        run: |
-          mv -f config/bcm27xx/bcm2711.config $OPENWRTROOT/.config
-          cd $OPENWRTROOT
-          make defconfig
-          make download -j16
-          find dl -size -1024c -exec ls -l {} \;
-          find dl -size -1024c -exec rm -f {} \;
-
       - name: Prepare Toolchain Image
         id: prepare
         run: |
@@ -75,6 +56,26 @@ jobs:
           git pull
           find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
           touch staging_dir/{host*,toolchain-*,target-*}/stamp/.*
+          lsblk
+          df -h
+
+      - name: Install Feeds
+        id: feeds
+        run: |
+          cd $OPENWRTROOT
+          ./scripts/feeds update -a 
+          ./scripts/feeds install -a
+
+      - name: Download Packages
+        id: download
+        run: |
+          mv -f config/bcm27xx/bcm2711.config $OPENWRTROOT/.config
+          # cat config/prebuild-packages.config >> $OPENWRTROOT/.config
+          cd $OPENWRTROOT
+          make defconfig
+          make download -j16
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
 
       - name: Compile Firmware
         id: compile
