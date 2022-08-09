@@ -23,11 +23,11 @@ env:
 
 jobs:
   Build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        PLATFORM: [bcm27xx/bcm2708, bcm27xx/bcm2709, bcm27xx/bcm2710, bcm27xx/bcm2711, ipq40xx/generic, rockchip/armv8, x86/64, x86/generic]
+        PLATFORM: [bcm27xx/bcm2711, x86/64]
 
     steps:
       - name: Checkout
@@ -39,10 +39,11 @@ jobs:
         run: |
           sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
           sudo -E apt-get -qq update
-          sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+          sudo -E apt-get -qq install tzdata $(curl -fsSL git.io/depends-ubuntu-2004) rdate
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
-          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
+          sudo dpkg-reconfigure -f noninteractive tzdata
 
       - name: Clone Source Code
         id: clone
@@ -93,19 +94,19 @@ jobs:
 
       - name: Compile Tools
         id: tools
-        if: steps.compare.outputs.NEED_CACHE == 'true'
+        if: steps.compare.outputs.NEED_CACHE == 'true' && !cancelled()
         run: |
           cd $OPENWRTROOT
           echo -e "$(nproc) thread compile"
-          make tools/compile -j$(nproc) || make tools/compile -j1 V=s
+          make tools/compile -j$(nproc)
 
       - name: Compile Toolchain
         id: toolchain
-        if: steps.compare.outputs.NEED_CACHE == 'true'
+        if: steps.tools.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           echo -e "$(nproc) thread compile"
-          make toolchain/compile -j$(nproc) || make toolchain/compile -j1 V=s
+          make toolchain/compile -j$(nproc)
           make diffconfig
           cd $OPENWRTROOT/bin/targets/*
           TARGET=$(basename `pwd`)
@@ -114,9 +115,16 @@ jobs:
           SUBTARGET=$(basename `pwd`)
           echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
 
+      - name: Upload logs
+        uses: actions/upload-artifact@v2
+        if: steps.tools.conclusion != 'skipped' && !cancelled()
+        with:
+          name: Logs_${{ env.SOURCE_USER }}_${{ env.SOURCE_NAME }}_${{ env.SOURCE_BRANCH }}_${{ env.TARGET }}_${{ env.SUBTARGET }}
+          path: ${{ env.OPENWRTROOT }}/logs
+
       - name: Organize Files
         id: organize
-        if: steps.compare.outputs.NEED_CACHE == 'true'
+        if: steps.toolchain.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           find -maxdepth 1 -not -name staging_dir -not -name build_dir -not -name .ccache -not -name . | xargs rm -rf {}
