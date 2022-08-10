@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        PLATFORM: [bcm27xx/bcm2711, x86/64]
+        PLATFORM: [bcm27xx/bcm2711, x86/64, ath79/nand, ramips/mt7621]
 
     steps:
       - name: Checkout
@@ -85,7 +85,7 @@ jobs:
         if: steps.compare.outputs.NEED_CACHE == 'true'
         run: |
           mv config/$PLATFORM.config $OPENWRTROOT/.config
-          cat config/prebuild-packages.config >> $OPENWRTROOT/.config
+          cat config/extra.config >> $OPENWRTROOT/.config
           cd $OPENWRTROOT
           make defconfig
           make download -j16
