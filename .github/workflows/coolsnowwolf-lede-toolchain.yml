@@ -68,7 +68,7 @@ jobs:
           export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/cache-hash.txt)
           echo "CACHE_HASH is $CACHE_HASH"
           if [ -z "$CACHE_HASH" ] || [ "$CURRENT_HASH" != "$CACHE_HASH" ]; then
-            echo "::set-output name=NEED_CACHE::true"
+            echo "NEED_CACHE=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Install Feeds
@@ -118,7 +118,7 @@ jobs:
           echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
 
       - name: Upload logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: steps.tools.conclusion != 'skipped' && !cancelled()
         with:
           name: Logs_${{ env.SOURCE_USER }}_${{ env.SOURCE_NAME }}_${{ env.SOURCE_BRANCH }}_${{ env.TARGET }}_${{ env.SUBTARGET }}
@@ -139,7 +139,7 @@ jobs:
       - name: Deploy Files To Release
         id: release
         if: steps.organize.conclusion == 'success' && !cancelled()
-        uses: ncipollo/release-action@v1.8.0
+        uses: ncipollo/release-action@v1
         with:
           name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-toolchain-cache
           allowUpdates: true
