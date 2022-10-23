@@ -132,7 +132,7 @@ jobs:
           mkdir -p output
           cd $OPENWRTROOT/bin/targets/*/*
           TOOLCHAIN=$(ls | grep .tar.bz2)
-          mv $TOOLCHAIN $GITHUB_WORKSPACE/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.tar.bz2
+          mv $TOOLCHAIN $GITHUB_WORKSPACE/output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.tar.bz2
           echo $CURRENT_HASH >> $GITHUB_WORKSPACE/output/cache-hash.txt
           df -hT $PWD
 
