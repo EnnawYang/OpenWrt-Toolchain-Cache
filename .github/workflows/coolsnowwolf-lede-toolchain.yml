@@ -59,6 +59,7 @@ jobs:
 
       - name: Compare Hash
         id: compare
+        if: steps.clone.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           export CURRENT_HASH=$(git log --pretty=tformat:"%h" -n1 tools toolchain)
@@ -82,7 +83,7 @@ jobs:
         env:
           PLATFORM: ${{ matrix.PLATFORM }}
         id: download
-        if: steps.compare.outputs.NEED_CACHE == 'true'
+        if: steps.feeds.conclusion == 'success' && !cancelled()
         run: |
           mv config/$PLATFORM.config $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
@@ -94,7 +95,7 @@ jobs:
 
       - name: Compile Tools
         id: tools
-        if: steps.compare.outputs.NEED_CACHE == 'true' && !cancelled()
+        if: steps.feeds.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           echo -e "$(nproc) thread compile"
@@ -107,6 +108,7 @@ jobs:
           cd $OPENWRTROOT
           echo -e "$(nproc) thread compile"
           make toolchain/compile -j$(nproc)
+          make target/toolchain/compile -j$(nproc)
           make diffconfig
           cd $OPENWRTROOT/bin/targets/*
           TARGET=$(basename `pwd`)
@@ -126,19 +128,17 @@ jobs:
         id: organize
         if: steps.toolchain.conclusion == 'success' && !cancelled()
         run: |
-          cd $OPENWRTROOT
-          find -maxdepth 1 -not -name staging_dir -not -name build_dir -not -name .ccache -not -name . | xargs rm -rf {}
-          rm -rf build_dir/target*
-          rm -rf staging_dir/target*
-          cd ..
+          cd $GITHUB_WORKSPACE
           mkdir -p output
-          tar -Jcvf output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.tar.xz -C openwrt .
-          echo $CURRENT_HASH >> output/cache-hash.txt
+          cd $OPENWRTROOT/bin/targets/*/*
+          TOOLCHAIN=$(ls | grep .tar.bz2)
+          mv $TOOLCHAIN $GITHUB_WORKSPACE/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.tar.bz2
+          echo $CURRENT_HASH >> $GITHUB_WORKSPACE/output/cache-hash.txt
           df -hT $PWD
 
       - name: Deploy Files To Release
         id: release
-        if: steps.compare.outputs.NEED_CACHE == 'true'
+        if: steps.organize.conclusion == 'success' && !cancelled()
         uses: ncipollo/release-action@v1.8.0
         with:
           name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-toolchain-cache
