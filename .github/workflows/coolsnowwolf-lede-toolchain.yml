@@ -101,6 +101,22 @@ jobs:
           echo -e "$(nproc) thread compile"
           make tools/compile -j$(nproc)
 
+      - name: Organize Tools Files
+        id: organize_tools
+        if: steps.tools.conclusion == 'success' && !cancelled()
+        run: |
+          cd $GITHUB_WORKSPACE
+          mkdir -p output/tools
+          cd $OPENWRTROOT
+          cp -R build_dir $GITHUB_WORKSPACE/output/tools/
+          cp -R staging_dir $GITHUB_WORKSPACE/output/tools/
+          [ -d .ccache ] && cp -R .ccache $GITHUB_WORKSPACE/output/tools/
+          cd $GITHUB_WORKSPACE/output
+          # rm -rf build_dir/target* staging_dir/target*
+          cd $GITHUB_WORKSPACE
+          tar -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz -C tools .
+          rm -rf tools
+
       - name: Compile Toolchain
         id: toolchain
         if: steps.tools.conclusion == 'success' && !cancelled()
@@ -109,36 +125,33 @@ jobs:
           echo -e "$(nproc) thread compile"
           make toolchain/compile -j$(nproc)
           make target/toolchain/compile -j$(nproc)
-          make diffconfig
           cd $OPENWRTROOT/bin/targets/*
-          TARGET=$(basename `pwd`)
-          echo "TARGET=$TARGET" >> $GITHUB_ENV
+          DEVICE_TARGET=$(basename `pwd`)
+          echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
           cd *
-          SUBTARGET=$(basename `pwd`)
-          echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
+          DEVICE_SUBTARGET=$(basename `pwd`)
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+
+      - name: Organize Toolchain Files
+        id: organize_toolchain
+        if: steps.toolchain.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT/bin/targets/*/*
+          TOOLCHAIN=$(ls | grep .tar.bz2)
+          mv $TOOLCHAIN $GITHUB_WORKSPACE/output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.bz2
+          echo $CURRENT_HASH >> $GITHUB_WORKSPACE/output/cache-hash.txt
+          df -hT $PWD
 
       - name: Upload logs
         uses: actions/upload-artifact@v3
         if: steps.tools.conclusion != 'skipped' && !cancelled()
         with:
-          name: Logs_${{ env.SOURCE_USER }}_${{ env.SOURCE_NAME }}_${{ env.SOURCE_BRANCH }}_${{ env.TARGET }}_${{ env.SUBTARGET }}
+          name: Logs_${{ env.SOURCE_USER }}_${{ env.SOURCE_NAME }}_${{ env.SOURCE_BRANCH }}_${{ env.DEVICE_TARGET }}_${{ env.DEVICE_SUBTARGET }}
           path: ${{ env.OPENWRTROOT }}/logs
-
-      - name: Organize Files
-        id: organize
-        if: steps.toolchain.conclusion == 'success' && !cancelled()
-        run: |
-          cd $GITHUB_WORKSPACE
-          mkdir -p output
-          cd $OPENWRTROOT/bin/targets/*/*
-          TOOLCHAIN=$(ls | grep .tar.bz2)
-          mv $TOOLCHAIN $GITHUB_WORKSPACE/output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$TARGET-$SUBTARGET.tar.bz2
-          echo $CURRENT_HASH >> $GITHUB_WORKSPACE/output/cache-hash.txt
-          df -hT $PWD
 
       - name: Deploy Files To Release
         id: release
-        if: steps.organize.conclusion == 'success' && !cancelled()
+        if: steps.organize_tools.conclusion == 'success' && steps.organize_toolchain.conclusion == 'success' && !cancelled()
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-toolchain-cache
