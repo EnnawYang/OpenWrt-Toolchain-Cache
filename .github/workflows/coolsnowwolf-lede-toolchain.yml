@@ -105,20 +105,20 @@ jobs:
           echo -e "$(nproc) thread compile"
           make tools/compile -j$(nproc)
 
-      - name: Organize Tools Files
-        id: organize_tools
-        if: steps.tools.conclusion == 'success' && !cancelled()
-        run: |
-          cd $GITHUB_WORKSPACE
-          mkdir -p output/tools
-          cd $OPENWRTROOT
-          cp -R build_dir $GITHUB_WORKSPACE/output/tools/
-          cp -R staging_dir $GITHUB_WORKSPACE/output/tools/
-          [ -d .ccache ] && cp -R .ccache $GITHUB_WORKSPACE/output/tools/
-          cd $GITHUB_WORKSPACE/output
-          # rm -rf build_dir/target* staging_dir/target*
-          tar -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz -C tools .
-          rm -rf tools
+#      - name: Organize Tools Files
+#        id: organize_tools
+#        if: steps.tools.conclusion == 'success' && !cancelled()
+#        run: |
+#          cd $GITHUB_WORKSPACE
+#          mkdir -p output/tools
+#          cd $OPENWRTROOT
+#          cp -R build_dir $GITHUB_WORKSPACE/output/tools/
+#          cp -R staging_dir $GITHUB_WORKSPACE/output/tools/
+#          [ -d .ccache ] && cp -R .ccache $GITHUB_WORKSPACE/output/tools/
+#          cd $GITHUB_WORKSPACE/output
+#          # rm -rf build_dir/target* staging_dir/target*
+#          tar -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz -C tools .
+#          rm -rf tools
 
       - name: Compile Toolchain
         id: toolchain
@@ -154,7 +154,7 @@ jobs:
 
       - name: Deploy Files To Release
         id: release
-        if: steps.organize_tools.conclusion == 'success' && steps.organize_toolchain.conclusion == 'success' && !cancelled()
+        if: steps.organize_toolchain.conclusion == 'success' && !cancelled()
         uses: ncipollo/release-action@v1
         with:
           name: ${{ env.SOURCE_USER }}-${{ env.SOURCE_NAME }}-${{ env.SOURCE_BRANCH }}-toolchain-cache
