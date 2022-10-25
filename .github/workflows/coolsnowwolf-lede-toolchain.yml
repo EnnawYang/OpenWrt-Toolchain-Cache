@@ -88,6 +88,10 @@ jobs:
           mv config/$PLATFORM.config $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
           cd $OPENWRTROOT
+          export DEVICE_TARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f3)"
+          echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+          export DEVICE_SUBTARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f4)"
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
           make defconfig
           make download -j16
           find dl -size -1024c -exec ls -l {} \;
@@ -125,12 +129,12 @@ jobs:
           echo -e "$(nproc) thread compile"
           make toolchain/compile -j$(nproc)
           make target/toolchain/compile -j$(nproc)
-          cd $OPENWRTROOT/bin/targets/*
-          DEVICE_TARGET=$(basename `pwd`)
-          echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
-          cd *
-          DEVICE_SUBTARGET=$(basename `pwd`)
-          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+          # cd $OPENWRTROOT/bin/targets/*
+          # DEVICE_TARGET=$(basename `pwd`)
+          # echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+          # cd *
+          # DEVICE_SUBTARGET=$(basename `pwd`)
+          # echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
 
       - name: Organize Toolchain Files
         id: organize_toolchain
