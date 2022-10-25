@@ -117,7 +117,6 @@ jobs:
           [ -d .ccache ] && cp -R .ccache $GITHUB_WORKSPACE/output/tools/
           cd $GITHUB_WORKSPACE/output
           # rm -rf build_dir/target* staging_dir/target*
-          cd $GITHUB_WORKSPACE
           tar -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz -C tools .
           rm -rf tools
 
