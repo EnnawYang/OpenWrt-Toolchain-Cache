@@ -105,20 +105,12 @@ jobs:
           echo -e "$(nproc) thread compile"
           make tools/compile -j$(nproc)
 
-#      - name: Organize Tools Files
-#        id: organize_tools
-#        if: steps.tools.conclusion == 'success' && !cancelled()
-#        run: |
-#          cd $GITHUB_WORKSPACE
-#          mkdir -p output/tools
-#          cd $OPENWRTROOT
-#          cp -R build_dir $GITHUB_WORKSPACE/output/tools/
-#          cp -R staging_dir $GITHUB_WORKSPACE/output/tools/
-#          [ -d .ccache ] && cp -R .ccache $GITHUB_WORKSPACE/output/tools/
-#          cd $GITHUB_WORKSPACE/output
-#          # rm -rf build_dir/target* staging_dir/target*
-#          tar -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz -C tools .
-#          rm -rf tools
+      - name: Organize Tools Files
+        id: organize_tools
+        if: steps.tools.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          tar --mtime=now -Jcvf $SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz staging_dir/host build_dir/host dl .ccache
 
       - name: Compile Toolchain
         id: toolchain
@@ -139,9 +131,12 @@ jobs:
         id: organize_toolchain
         if: steps.toolchain.conclusion == 'success' && !cancelled()
         run: |
+          cd $GITHUB_WORKSPACE
+          mkdir -p output
+          mv $OPENWRTROOT/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-tools.tar.xz $GITHUB_WORKSPACE/output/
           cd $OPENWRTROOT/bin/targets/*/*
-          TOOLCHAIN=$(ls | grep .tar.bz2)
-          mv $TOOLCHAIN $GITHUB_WORKSPACE/output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.bz2
+          TOOLCHAIN_TAR=$(ls | grep .tar.bz2)
+          mv $TOOLCHAIN_TAR $GITHUB_WORKSPACE/output/$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.bz2
           echo $CURRENT_HASH >> $GITHUB_WORKSPACE/output/cache-hash.txt
           df -hT $PWD
 
