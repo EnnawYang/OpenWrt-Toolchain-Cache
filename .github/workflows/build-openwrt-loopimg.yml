@@ -187,7 +187,7 @@ jobs:
         if: steps.generate.conclusion == 'success' && !cancelled()
         uses: ncipollo/release-action@v1
         with:
-          name: ${{ env.TARGET_INFO }}-prebuild
+          name: ${{ env.TARGET_INFO }}-prebuild-img
           allowUpdates: true
           tag: ${{ env.RELEASE_TAG }}
           commit: ${{ env.RELEASE_BRANCH }}
@@ -329,7 +329,7 @@ jobs:
         if: steps.organize.conclusion == 'success' && !cancelled()
         uses: ncipollo/release-action@v1
         with:
-          name: ${{ env.TARGET_INFO }}-prebuild
+          name: ${{ env.TARGET_INFO }}-prebuild-img
           allowUpdates: true
           tag: ${{ env.RELEASE_TAG }}
           commit: ${{ env.RELEASE_BRANCH }}

@@ -156,7 +156,6 @@ jobs:
           sudo -E apt-get -qq clean
           sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
           sudo dpkg-reconfigure -f noninteractive tzdata
-          mkdir output
 
       - name: Generate Variables
         id: env
@@ -204,15 +203,15 @@ jobs:
         run: |
           cd $OPENWRTROOT
           rm -rf build_dir staging_dir
-          wget -c -t=3 https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$TOOLCHAIN_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-prebuild-tools.tar.xz
+          wget -c -t=3 https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/$TARGET_INFO-prebuild-tools.tar.xz
           ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
           rm *.tar.xz
 
-      - name: Download Packages
+      - name: Prepare config file
         env:
           PLATFORM: ${{ matrix.PLATFORM }}
-        id: download
-        if: steps.feeds.conclusion == 'success' && !cancelled()
+        id: config
+        if: steps.fetch.conclusion == 'success' && !cancelled()
         run: |
           cp config/$PLATFORM.config $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
@@ -224,17 +223,16 @@ jobs:
           make defconfig
           export DEVICE_ARCH="$(grep -v ^\# .config | grep CONFIG_ARCH= | cut -d\" -f2)"
           echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
-          make download -j16
-          find dl -size -1024c -exec ls -l {} \;
-          find dl -size -1024c -exec rm -f {} \;
+          DEVICE_ARCH_PACKAGES="$(grep -v ^\# .config | grep CONFIG_TARGET_ARCH_PACKAGES= | cut -d\" -f2)"
+          echo "DEVICE_ARCH_PACKAGES=$DEVICE_ARCH_PACKAGES" >> $GITHUB_ENV
 
       - name: Modify Files
         id: modify
-        if: steps.download.conclusion == 'success' && !cancelled()
+        if: steps.config.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
-          mkdir -p staging_dir/target-"$DEVICE_ARCH"_musl
-          touch staging_dir/target-"$DEVICE_ARCH"_musl/.prepared
+          mkdir -p staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl
+          touch staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl/.prepared
           sed -i '/tools\/Makefile/d' Makefile
           sed -i 's/ $(tools\/stamp-compile)//;s/ $(tools\/stamp-check)//' Makefile
 
@@ -244,7 +242,7 @@ jobs:
         run: |
           cd $OPENWRTROOT
           echo -e "$(nproc) thread compile"
-          make toolchain/install -j$(nproc)
+          make toolchain/install -j$(nproc) || make toolchain/install -j1 V=s
           make target/toolchain/install -j$(nproc)
 
       - name: Upload Error logs
