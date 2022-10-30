@@ -93,6 +93,7 @@ jobs:
           echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
           export TARGET_INFO="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH"
           echo "TARGET_INFO=$TARGET_INFO" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
           mkdir -p workspace/openwrt
           cd workspace/openwrt
           echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
@@ -238,6 +239,7 @@ jobs:
           echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
           export TARGET_INFO="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH"
           echo "TARGET_INFO=$TARGET_INFO" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
 
       - name: Compare Toolchain Hash
         id: hash
