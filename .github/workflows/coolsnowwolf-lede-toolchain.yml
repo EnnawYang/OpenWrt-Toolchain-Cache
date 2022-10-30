@@ -26,6 +26,10 @@ jobs:
     name: Compile Tools
     runs-on: ubuntu-20.04
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -112,7 +116,7 @@ jobs:
         run: |
           mkdir output
           cd $OPENWRTROOT
-          tar --mtime=now -Jcvf $GITHUB_WORKSPACE/output/$TARGET_INFO-prebuild-tools.tar.xz staging_dir/host build_dir/host dl .ccache
+          tar --mtime=now -Jcf $GITHUB_WORKSPACE/output/$TARGET_INFO-prebuild-tools.tar.xz staging_dir/host build_dir/host .ccache
           echo $CURRENT_TOOLS_HASH > $GITHUB_WORKSPACE/output/cache-tools-hash.txt
           ls -lh $GITHUB_WORKSPACE/output
 
