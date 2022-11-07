@@ -89,6 +89,7 @@ jobs:
           cd $OPENWRTROOT
           touch .config
           echo CONFIG_DEVEL=y >> .config
+          # echo CONFIG_BUILD_ALL_HOST_TOOLS=y >> .config
           echo CONFIG_AUTOREMOVE=y >> .config
           echo CONFIG_CCACHE=y >> .config
           echo CONFIG_BUILD_LOG=y >> .config
@@ -96,8 +97,15 @@ jobs:
           echo CONFIG_ALL=y >> .config
           make defconfig
 
+      - name: Download Tools
+        if: steps.config.conclusion == 'success' && !cancelled()
+        id: download
+        run: |
+          cd $OPENWRTROOT
+          make tools/download -j16
+
       - name: Compile Tools
-        if: steps.feeds.conclusion == 'success' && !cancelled()
+        if: steps.download.conclusion == 'success' && !cancelled()
         id: tools
         run: |
           cd $OPENWRTROOT
